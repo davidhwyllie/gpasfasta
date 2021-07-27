@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+oci = "*"
+flake8 = "*"
+pandas = "*"
+requests = "*"
+biopython = "*"
+sqlalchemy = "*"
+cx-oracle = "*"
+sentry-sdk = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
