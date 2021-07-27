@@ -1,5 +1,9 @@
 """ analyses objects in OCI's objectstore and loads them into a findNeighbour4 instance 
 
+Note on this code:
+It is using batch based processes to scan object stores and find new samples for loading.
+Many optimisations (such as the use of messaging queues) are feasible.
+
 Technical notes on the SDK:
 Exceptions: https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/exceptions.html
 Object Storage: https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/object_storage/osc/oci.object_storage.ObjectStorageosc.html
@@ -826,6 +830,7 @@ if __name__ == "__main__":
         action="store",
         nargs="?",
     )
+
     parser.add_argument(
         "connection_config",
         help="the database access string, or the key to an oracle connection dictionary.  see docs",
@@ -841,6 +846,7 @@ if __name__ == "__main__":
         nargs="?",
         default=0,
     )
+
     args = parser.parse_args()
 
     if os.environ.get("FN_SENTRY_URL") is not None:
@@ -855,7 +861,7 @@ if __name__ == "__main__":
         namespace_name=args.namespace_name,
         input_bucket_name=args.input_bucket_name,
         connection_config=args.connection_config,
-        debug=args.debug,
+        debug=args.debug
     )
 
     while True:
@@ -863,4 +869,4 @@ if __name__ == "__main__":
         n_inserted = os2fn4.insert_files_into_server()
 
         if n_inserted == 0:
-            time.sleep(60)
+            time.sleep(180)     # seconds
