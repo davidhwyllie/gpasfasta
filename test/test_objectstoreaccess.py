@@ -32,8 +32,58 @@ class BucketAccess_startup(unittest.TestCase):
             )
 
 
+class Test_BucketAccess_0(BucketAccess_startup):
+    """tests the BucketAccess class, with a config file."""
+
+    def runTest(self):
+
+        ba = BucketAccess(
+            namespace_name=self.NAMESPACE_NAME, 
+            bucket_name=self.BUCKET_NAME,
+            config_file_location=None,
+            profile_name=None,
+            
+        )
+
+        # there should be nothing in the bucket to start with, but we cannot guarantee this
+        current_files = ba.list_files()
+        if current_files is not None:  # there are some
+            for filename in current_files["name"]:
+                ba.delete_object(object_name=filename)  # delete them
+                print(filename)
+
+        # check that where there are no files, list_files returns None.
+        current_files = ba.list_files()
+        self.assertIsNone(current_files)
+
+        # check that if we ask to recover an object which does not exist, an error is raised.
+        with self.assertRaises(oci.exceptions.ServiceError):
+            ba.load_bucket_into_string(object_name="doesnotexist.txt")
+
+        # write a file to the object store
+        object_content = "david was here  putting this into Object storage"
+        ba.save_string_into_object(
+            object_name="unittesting_wrote_this.txt", object_content=object_content
+        )
+
+        # check this is listed
+        current_files = ba.list_files()
+        self.assertIsInstance(current_files, pd.DataFrame)
+        self.assertEqual(len(current_files.index), 1)
+
+        # check we can read the string back
+        res = ba.load_bucket_into_string(object_name="unittesting_wrote_this.txt")
+        self.assertEqual(res, object_content)
+
+        # delete the object
+        ba.delete_object(object_name="unittesting_wrote_this.txt")
+
+        # check it has gone
+        current_files = ba.list_files()
+        self.assertIsNone(current_files)
+
 class Test_BucketAccess_1(BucketAccess_startup):
-    """tests the BucketAccess class."""
+    """tests the BucketAccess class, with a config file."""
 
     def runTest(self):
 

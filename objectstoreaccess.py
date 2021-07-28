@@ -7,7 +7,7 @@ Many optimisations (such as the use of messaging queues) are feasible.
 Technical notes on the SDK:
 Exceptions: https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/exceptions.html
 Object Storage: https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/object_storage/osc/oci.object_storage.ObjectStorageosc.html
-Code snippet for ObjectStorageosc.get_object() method https://docs.oracle.com/en-us/iaas/tools/python-sdk-examples/2.43.0/objectstorage/get_object.py.html
+Code snippet for ObjectStorage:  osc.get_object() method https://docs.oracle.com/en-us/iaas/tools/python-sdk-examples/2.43.0/objectstorage/get_object.py.html
 
 Note: these calls return 'Response' objects, but these are not the same object returned by the Requests library, despite Requests being used internaly by OCI.
 They have different attributes and methods, including a 'data' attribute.
@@ -155,8 +155,8 @@ class BucketAccess:
         ==========
         namespace_name: the OCI bucket namespace name
         bucket_name: the OCI bucket name
-        config_file_location: the OCI configuration file location
-        profile_name: the profile with the configuration file from which to read credentials.
+        config_file_location: the OCI configuration file location.  If None, performs Instance principal based authentication
+        profile_name: the profile with the configuration file from which to read credentials.  Ignored if config_file_location is None.
 
         Note: as a prerequisite, you need to set up an OCI credentials file in the location 'config_file_location';
         see https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/configuration.html and also README.md
@@ -167,13 +167,35 @@ class BucketAccess:
         self.config_file_location = config_file_location
         self.profile_name = profile_name
 
-        config = oci.config.from_file(
-            profile_name=self.profile_name, file_location=self.config_file_location
-        )
-        oci.config.validate_config(config)
+        if config_file_location is not None:
+            # make a connection config from the file provided 
+            self.config = oci.config.from_file(
+                profile_name=self.profile_name, file_location=self.config_file_location
+            )
+            self.signer = None
+            oci.config.validate_config(self.config)
 
-        # make ObjectStorageClient
-        self.osc = oci.object_storage.ObjectStorageClient(config)
+            # make ObjectStorageClient
+            self.osc = oci.object_storage.ObjectStorageClient(self.config)
+
+        else:
+            # perform instance principal based authentication
+            # create the signer
+
+            try:
+                # get signer from instance principals token
+                self.signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+            except Exception:
+                print("There was an error while trying to get the Signer")
+                raise SystemExit
+
+            # generate config info from signer
+            self.config = {'region': self.signer.region, 'tenancy': self.signer.tenancy_id}
+
+            # initiate the object client
+
+            self.osc = oci.object_storage.ObjectStorageClient(config = {}, signer=self.signer)
+
 
     def list_files(self):
         """lists files/objects in the bucket
