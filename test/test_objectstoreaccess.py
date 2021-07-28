@@ -33,7 +33,7 @@ class BucketAccess_startup(unittest.TestCase):
 
 
 class Test_BucketAccess_0(BucketAccess_startup):
-    """tests the BucketAccess class, with a config file."""
+    """tests the BucketAccess class, with a Identity Principal authentication."""
 
     def runTest(self):
 

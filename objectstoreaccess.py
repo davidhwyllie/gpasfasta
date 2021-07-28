@@ -672,8 +672,12 @@ class ObjectStore2FN4:
             self.Session()
         )  # thread local session ; will be reused if need be transparently
 
+        # will use Identity Principal Authentication
         input_ba = BucketAccess(
-            namespace_name=self.namespace_name, bucket_name=self.input_bucket_name
+            namespace_name=self.namespace_name, 
+            bucket_name=self.input_bucket_name,
+            config_file_location=None
+
         )
 
         current_files = input_ba.list_files()
@@ -859,6 +863,7 @@ if __name__ == "__main__":
         type=str,
         action="store",
         nargs="?",
+        default=None
     )
     parser.add_argument(
         "--debug",
