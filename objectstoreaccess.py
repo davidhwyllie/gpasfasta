@@ -201,7 +201,6 @@ class BucketAccess:
 
             self.osc = oci.object_storage.ObjectStorageClient(config = {}, signer=self.signer)
 
-
     def list_files(self):
         """lists files/objects in the bucket
 
@@ -574,6 +573,15 @@ class ObjectStore2FN4:
         else:
             logging.info("Using stored data in rdbms")
 
+    def remove_entries_older_than_days(self, n_days):
+        """ removes database entries olders than n_days ago """
+        cutoff_datetime = datetime.datetime.now() - datetime.timedelta(days = n_days)
+        tls = (
+            self.Session()
+        )
+        tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
+        tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
+               
     def _absurl(self, relpath):
         """constructs an absolute URL from the relative path requested"""
 
@@ -746,6 +754,7 @@ class ObjectStore2FN4:
         tls.add(bc)
         tls.commit()
 
+        n_inserted = 0
         for i, file_name in enumerate(current_files["name"]):
 
             bucket_read_start_time = datetime.datetime.now()
@@ -774,7 +783,6 @@ class ObjectStore2FN4:
             }
 
             seq = None
-
             with io.StringIO(file_content) as f:
 
                 for record in SeqIO.parse(f, "fasta"):
@@ -796,7 +804,6 @@ class ObjectStore2FN4:
                     res["parse_status"] = "Failed, seqid does not start with GPAS"
 
             if res["fn4id"] is not None:
-
                 res["insert_start_time"] = datetime.datetime.now()
                 insert_response = self._insert(res["fn4id"], seq)
                 res["insert_end_time"] = datetime.datetime.now()
@@ -808,6 +815,7 @@ class ObjectStore2FN4:
             if not res["parse_status"] == "Success":
                 move_file = 1
             if res["insert_status_code"] == 200:
+                n_inserted +=1
                 move_file = 1
             res["completed"] = move_file
             logging.info(
@@ -818,7 +826,7 @@ class ObjectStore2FN4:
 
             tls.add(FN4LoadAttempt(**res))
             tls.commit()
-        return {"added": i}
+        return {"added": n_inserted}
         print("Finished")
 
 
@@ -897,8 +905,9 @@ if __name__ == "__main__":
     )
 
     while True:
-
+        os2fn4.remove_entries_older_than_days(90)           # remove anything more than three months ago
         n_inserted = os2fn4.insert_files_into_server()
 
+        # if we didn't insert anything, wait 60 seconds before looking again.
         if n_inserted == 0:
-            time.sleep(180)     # seconds
+            time.sleep(60)     # seconds
