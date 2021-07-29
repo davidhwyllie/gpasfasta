@@ -582,7 +582,7 @@ class ObjectStore2FN4:
         tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
         tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
         tls.commit()
-             
+
     def _absurl(self, relpath):
         """constructs an absolute URL from the relative path requested"""
 
@@ -698,6 +698,16 @@ class ObjectStore2FN4:
         if current_files is None:
             return {"added": 0}  # nothing  to insert
 
+        # if it's not a fasta file, we ignore it.
+        not_fasta = []
+        for ix in current_files.index:
+            if not current_files.loc[ix, 'name'].endswith('.fasta'):
+                not_fasta.append(ix)
+        current_files = current_files.drop(not_fasta)
+
+        if current_files is None:
+            return {"added": 0}  # nothing  to insert
+
         guids = self.guids()
         logging.info("Recovered {0} sample_ids from server".format(len(guids)))
         logging.info(
@@ -735,7 +745,8 @@ class ObjectStore2FN4:
         ):
             completed.append(fn4id)
         completed = set(completed)
-
+        print(completed)
+        exit()
         to_add = to_add - completed
         logging.info("There are {0} samples to add".format(len(to_add)))
 
