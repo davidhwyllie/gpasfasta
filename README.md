@@ -35,6 +35,23 @@ select * from db.fn4batchload order by bl_int_id;
 select * from db.fn4loadattempt ;
 ```
 
+### things which should not happen and could form the basis of a dashboard
+
+* The server returns status 500 codes
+```
+select * FROM FN4LOADER.FN4LOADATTEMPT where not insert_status_code = 200 order by gp_int_id desc;
+```
+* The batch loader isn't trying to insert data.  It tries every minute, unless insertion is in progress.
+
+Because of this, one of two things must have occurred in the last 60 seconds:
+* we inserted something successfully
+* a batch of samples was analysed (and no samples were found)
+
+```
+select * FROM FN4LOADER.FN4LOADATTEMPT where not insert_status_code = 200 order by gp_int_id desc;
+select max(check_time) from FN4LOADER.FN4BATCHLOAD;
+```
+
 ## Error logging
 If the environment variable FN_SENTRY_URL is set to a sentry.io connection string (it has to be set in the .env in you are using a virtual environment), then all errors will be logged to sentry.io.
 
