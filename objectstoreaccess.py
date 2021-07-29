@@ -113,7 +113,7 @@ class FN4LoadAttempt(db_pc):
     batch_sample_number = Column(Integer, comment="the number in the batch")
     batch_size = Column(Integer, comment="the batch size")
     batch_sample_number = Column(Integer, comment="the batch size")
-    seqid = Column(String(38), comment="the sequence id", nullable=True)
+    seqid = Column(String(80), comment="the defline in the fasta file", nullable=True)
     file_name = Column(String(128), comment="the sequence id")
     len_seq = Column(Integer, nullable=True)
     first_128_chars = Column(String(128), nullable=True)
