@@ -58,6 +58,11 @@ class FN4LoadError(Exception):
     pass
 
 
+class OracleBucketAuthenticationSignerError(Exception):
+    """a raised if a Signer could not be constructed."""
+
+    pass
+
 class FN4BatchLoadCheck(db_pc):
     __tablename__ = "fn4batchload"
     bl_int_id = Column(
@@ -185,10 +190,10 @@ class BucketAccess:
             try:
                 # get signer from instance principals token
                 self.signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
-            except Exception:
-                print("There was an error while trying to get the Signer")
-                raise SystemExit
-
+            except Exception as e:
+                print("There was an error while trying to construct a  oci.auth.signers.InstancePrincipalsSecurityTokenSigner object")
+                capture(e)
+                raise OracleBucketAuthenticationSignerError()
             # generate config info from signer
             self.config = {'region': self.signer.region, 'tenancy': self.signer.tenancy_id}
 
