@@ -581,7 +581,8 @@ class ObjectStore2FN4:
         )
         tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
         tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
-               
+        tls.commit()
+             
     def _absurl(self, relpath):
         """constructs an absolute URL from the relative path requested"""
 
