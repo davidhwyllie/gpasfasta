@@ -837,8 +837,9 @@ class ObjectStore2FN4:
 
             tls.add(FN4LoadAttempt(**res))
             tls.commit()
+
         return {"added": n_inserted}
-        print("Finished")
+
 
 
 if __name__ == "__main__":
@@ -917,8 +918,8 @@ if __name__ == "__main__":
 
     while True:
         os2fn4.remove_entries_older_than_days(90)           # remove anything more than three months ago
-        n_inserted = os2fn4.insert_files_into_server()
+        result = os2fn4.insert_files_into_server()
 
         # if we didn't insert anything, wait 60 seconds before looking again.
-        if n_inserted == 0:
+        if result['added'] == 0:
             time.sleep(60)     # seconds
