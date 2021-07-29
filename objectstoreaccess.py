@@ -745,8 +745,7 @@ class ObjectStore2FN4:
         ):
             completed.append(fn4id)
         completed = set(completed)
-        print(completed)
-        exit()
+
         to_add = to_add - completed
         logging.info("There are {0} samples to add".format(len(to_add)))
 
