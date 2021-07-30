@@ -296,7 +296,7 @@ class BucketAccess:
             if e.code == "IfNoneMatchFailed":
                 result = "already exists"  # file already exists
             else:
-                sentry_sdk.capture(e)
+                sentry_sdk.capture_exception(e)
                 raise
         return result
 
