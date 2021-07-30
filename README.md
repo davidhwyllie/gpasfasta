@@ -52,6 +52,16 @@ select * FROM FN4LOADER.FN4LOADATTEMPT where not insert_status_code = 200 order 
 select max(check_time) from FN4LOADER.FN4BATCHLOAD;
 ```
 
+The following (in PL/SQL, oracle specific SQL) will recover the dates needing comparison:
+```
+select current_timestamp, rct.recent_check_time, rsi.recent_successful_insert_time,  from dual
+cross JOIN
+(select max(check_time) recent_check_time from FN4LOADER.FN4BATCHLOAD) rct
+cross join 
+(select max(insert_start_time) recent_successful_insert_time FROM FN4LOADER.FN4LOADATTEMPT where insert_status_code = 200) rsi
+;
+```
+
 ## Error logging
 If the environment variable FN_SENTRY_URL is set to a sentry.io connection string (it has to be set in the .env in you are using a virtual environment), then all errors will be logged to sentry.io.
 
