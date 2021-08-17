@@ -4,6 +4,7 @@ If successfully started, this software will
 - determine whether there are any fasta files in an OCI object store 
 - determine which have already been loaded into the server
 - start loading the batch, earliest first, and process until this is finished.
+- catalogue the results of the is activity in a database.
 
 It will then repeat the process, unless no files were found, in which case it will wait 3 minutes and then repeat.
 
@@ -29,7 +30,9 @@ The software writes to two database tables
 - fn4loadattempt: one row is written each time an attempt is made to load a sample into the fn4 database.
 
 Fields are commented and are self explanatory.
-You can log insertions into multiple fn4 servers into the same database.
+You can log insertions into multiple fn4 servers into the same database;
+the machine and server combination is identified by host_name and findneighbour_server_url, and the below SQL will need to be modified slighly to accomodate study multiple logging.  
+
 ```
 select * from db.fn4batchload order by bl_int_id;
 select * from db.fn4loadattempt ;
@@ -70,7 +73,7 @@ Oracle provide a [SDK](https://oracle-cloud-infrastructure-python-sdk.readthedoc
 
 This code uses 
 - the Oracle SDK to access the objectstore
-- SQLalchemy to access databases  to log the results of the 
+- SQLalchemy to access databases  to log the results of the loader's activities. 
 
 ## Prerequisites
 [OCI Python SDK](https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/installation.html) which can be installed via PyPI
