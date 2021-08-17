@@ -72,7 +72,7 @@ class FN4BatchLoadCheck(db_pc):
         comment="the primary key to the table",
     )
     host_name = Column(
-        String(16),
+        String(64),
         comment="the host machine on which the fn4 server is operating, e.g. fn4dev",
         index=True,
     )
@@ -99,7 +99,7 @@ class FN4LoadAttempt(db_pc):
         comment="the primary key to the table",
     )
     host_name = Column(
-        String(16),
+        String(64),
         comment="the host machine on which the fn4 server is operating, e.g. fn4dev",
     )
     findneighbour_server_url = Column(
@@ -296,7 +296,7 @@ class BucketAccess:
             if e.code == "IfNoneMatchFailed":
                 result = "already exists"  # file already exists
             else:
-                sentry_sdk.capture_exception(e)
+                sentry_sdk.capture(e)
                 raise
         return result
 
