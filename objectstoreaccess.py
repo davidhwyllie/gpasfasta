@@ -576,13 +576,13 @@ class ObjectStore2FN4:
     def remove_entries_older_than_days(self, n_days):
         """ removes database entries olders than n_days ago """
         cutoff_datetime = datetime.datetime.now() - datetime.timedelta(days = n_days)
-        tls = (
-            self.Session()
-        )
-        tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
-        tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
-        tls.commit()
-
+        tls = (self.Session())
+        try: 
+            tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
+            tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
+            tls.commit()
+        except:
+            tls.rollback()
     def _absurl(self, relpath):
         """constructs an absolute URL from the relative path requested"""
 
@@ -671,10 +671,12 @@ class ObjectStore2FN4:
         tls = (
             self.Session()
         )  # thread local session ; will be reused if need be transparently
-        tls.query(FN4BatchLoadCheck).delete()
-        tls.query(FN4LoadAttempt).delete()
-        tls.commit()
-
+        try:
+            tls.query(FN4BatchLoadCheck).delete()
+            tls.query(FN4LoadAttempt).delete()
+            tls.commit()
+        except:
+            tls.rollback()
     def guids(self, timeout=None):
         """returns all guids in the server"""
         return self._decode(self._getpost("/api/v2/guids", method="GET"))
@@ -762,9 +764,11 @@ class ObjectStore2FN4:
             batch_size=len(current_files.index),
             number_in_server=len(guids),
         )
-        tls.add(bc)
-        tls.commit()
-
+        try:
+            tls.add(bc)
+            tls.commit()
+        except:
+           tls.rollback()
         n_inserted = 0
         for i, file_name in enumerate(current_files["name"]):
 
@@ -834,13 +838,9 @@ class ObjectStore2FN4:
                     datetime.datetime.now().isoformat(), i, res["fn4id"], move_file
                 )
             )
-
             tls.add(FN4LoadAttempt(**res))
             tls.commit()
-
         return {"added": n_inserted}
-
-
 
 if __name__ == "__main__":
 
