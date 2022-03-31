@@ -781,7 +781,6 @@ class ObjectStore2FN4:
             self.engine.dispose()
         n_inserted = 0
         for i, file_name in enumerate(current_files["name"]):
-            print(n_inserted)
             bucket_read_start_time = datetime.datetime.now()
             file_content = input_ba.load_bucket_into_string(object_name=file_name)
             bucket_read_end_time = datetime.datetime.now()
