@@ -579,10 +579,18 @@ class ObjectStore2FN4:
         tls = (
             self.Session()
         )
-        tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
-        tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
-        tls.commit()
-
+        try:
+            tls.query(FN4BatchLoadCheck).filter(FN4BatchLoadCheck.check_time < cutoff_datetime).delete()
+            tls.query(FN4LoadAttempt).filter(FN4LoadAttempt.batch_start_time < cutoff_datetime).delete()
+            tls.commit()
+            #time allows us to see the connection for testing, otherwise its too fast in the database to see
+            time.sleep(5)
+        except Exception:
+            tls.close()
+            print("Connection to database failed, if issue persists troubleshoot issues with GPASFASTA and ATP.")
+        finally:
+            tls.close()
+            self.engine.dispose()
     def _absurl(self, relpath):
         """constructs an absolute URL from the relative path requested"""
 
@@ -762,12 +770,18 @@ class ObjectStore2FN4:
             batch_size=len(current_files.index),
             number_in_server=len(guids),
         )
-        tls.add(bc)
-        tls.commit()
-
+        try:
+            tls.add(bc)
+            tls.commit()
+        except:
+            tls.close()
+            print("Connection to database failed, if issue persists troubleshoot issues with GPASFASTA and ATP.")
+        finally:
+            tls.close()
+            self.engine.dispose()
         n_inserted = 0
         for i, file_name in enumerate(current_files["name"]):
-
+            print(n_inserted)
             bucket_read_start_time = datetime.datetime.now()
             file_content = input_ba.load_bucket_into_string(object_name=file_name)
             bucket_read_end_time = datetime.datetime.now()
@@ -919,7 +933,6 @@ if __name__ == "__main__":
     while True:
         os2fn4.remove_entries_older_than_days(90)           # remove anything more than three months ago
         result = os2fn4.insert_files_into_server()
-
         # if we didn't insert anything, wait 60 seconds before looking again.
         if result['added'] == 0:
             time.sleep(60)     # seconds
